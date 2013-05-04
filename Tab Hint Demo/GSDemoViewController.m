@@ -39,44 +39,44 @@
     
 }
 
-__autoreleasing NSArray* GS_pointsForGravityDrop(CGPoint startPoint, CGPoint endPoint, CFTimeInterval duration, CGFloat gravity) {
-    
-    // Gravity should be expressed in positive units; origin in iOS coordinates is top left, so y values decrease as we go up, increase as we go down
-    NSCAssert(gravity > 0.0, @"Gravity should be negative");
-    
-    // Calculate some values we'll need
-    CGFloat dx = endPoint.x - startPoint.x;
-    CGFloat dy = endPoint.y - startPoint.y;
-    
-    // Calculate the number of points we need in our array. This has been empirically determined to be about right. Basically the stronger the gravity, the more violent the animation and the more points we need to maintain precision. But maybe you could try deriving this from the duration instead, which might make more sense.
-    NSUInteger numberOfPoints = (NSUInteger)(gravity/40.0);
-    
-    CGFloat timePerIncrement = duration/(CGFloat)numberOfPoints;
+__autoreleasing NSArray* GS_pointsForGravityDrop(CGPoint startPoint, CGPoint endPoint, CFTimeInterval *duration) {
 
-    // Now calculate our initial vertical velocity. We can work out the average vertical velocity by looking at the change in y value over time. The velocity will change during the animation, but the rate of that change is constant (it's our gravity value). The total change in velocity will be gravity * duration. Given this, we can work out what the initial velocity will be, and what the velocity change per increment will be.
-    CGFloat averageVelocityY = dy/duration;
-    CGFloat totalVelocityChangeY = gravity * duration;
-    CGFloat initialVelocityY = averageVelocityY - totalVelocityChangeY / 2.0;
-    CGFloat incrementalVelocityChangeY = totalVelocityChangeY / (CGFloat)numberOfPoints;
+    NSCAssert(startPoint.y < endPoint.y, @"Start point must be above end point");
     
-    NSMutableArray *mutableResult = [NSMutableArray arrayWithCapacity:numberOfPoints];
+    static CGFloat gravity = 4000; // pixels per second squared. Play around with this. Larger values mean the animated view returns to earth more quickly
+    static CGFloat frameRate = 0.02;
+    static CGFloat initialVerticalVelocity = -1000.0; // pixels per second. Negative implies upwards movement, positive implies downwards movement.
+
+    CGFloat incrementalVelocityChangeY = gravity * frameRate;
+    
+    NSMutableArray *points = [NSMutableArray array];
+    
+    // Define initial values for y axis calculations
     CGFloat y = startPoint.y;
+    CGFloat velocityY = initialVerticalVelocity;
     
     // Now generate some points and stick 'em in an array
-    for (NSUInteger i = 0; i < numberOfPoints; i++) {
-        CGFloat t = timePerIncrement * i;
-        CGFloat progress = t/duration; // normalised progress between 0.0 (start) and 1.0 (end)
+    while (y < endPoint.y) {
+        // For now set x to 0, we'll come back and fill in the x values once we know the duration of the animation
+        [points addObject:[NSValue valueWithCGPoint:CGPointMake(0, y)]];
         
-        // x simply progresses linearly...
-        CGFloat x = startPoint.x + dx * progress;
-        
-        [mutableResult addObject:[NSValue valueWithCGPoint:CGPointMake(x, y)]];
-        
-        CGFloat velocityY = initialVelocityY + incrementalVelocityChangeY * i;
-        y = y + velocityY * timePerIncrement;
+        velocityY = velocityY + incrementalVelocityChangeY;
+        y = y + velocityY * frameRate;
     }
     
-    return [NSArray arrayWithArray:mutableResult];
+    // Now we know how many points we've got, go back through filling in the X values
+    CGFloat incrementalDisplacementChangeX = (endPoint.x - startPoint.x) / [points count];
+    [points enumerateObjectsWithOptions:NSEnumerationConcurrent usingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        CGPoint p = [obj CGPointValue];
+        p.x = startPoint.x + (CGFloat)idx * incrementalDisplacementChangeX;
+        [points replaceObjectAtIndex:idx withObject:[NSValue valueWithCGPoint:p]];
+    }];
+    
+    if (duration != NULL) {
+        *duration = frameRate * [points count];
+    }
+    
+    return [NSArray arrayWithArray:points];
 }
 
 
@@ -119,16 +119,15 @@ __autoreleasing NSArray* GS_pointsForGravityDrop(CGPoint startPoint, CGPoint end
     }];
 
     // Declare a couple of parameters we'll use throughout the animation
-    CFTimeInterval duration = 0.7;
+    CFTimeInterval duration;
     CGFloat finalScale = 0.5;
 
     // Create the position animation
     CGPoint fromPosition = [[indicatorView layer] position];
     CGPoint toPosition = CGPointMake(downloadTabHorizontalCenter, [self view].frame.size.height - [indicatorView frame].size.height / 2 * finalScale);
     CAKeyframeAnimation *positionAnimation = [CAKeyframeAnimation animationWithKeyPath:@"position"];
-    CGFloat gravity = 4000; // Play around with this. Larger values give a stronger upwards launch at the start of the animation.
     
-    NSArray *values = GS_pointsForGravityDrop(fromPosition, toPosition, duration, gravity);
+    NSArray *values = GS_pointsForGravityDrop(fromPosition, toPosition, &duration);
     [positionAnimation setValues:values];
     [positionAnimation setDuration:duration];
 
