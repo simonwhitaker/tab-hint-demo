@@ -46,7 +46,7 @@ __autoreleasing NSArray* GS_pointsForGravityDrop(CGPoint startPoint, CGPoint end
     
     CGFloat incrementalTimeChange = duration/(CGFloat)numberOfPoints;
     
-    // Gravity should be expressed in negative units: displacement decreases as we go up, increases as we go down
+    // Gravity should be expressed in positive units; origin in iOS coordinates is top left, so y values decrease as we go up, increase as we go down
     NSCAssert(gravity > 0.0, @"Gravity should be negative");
     
     CGFloat averageVelocityY = dy/duration;
