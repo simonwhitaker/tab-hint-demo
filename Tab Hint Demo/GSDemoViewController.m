@@ -39,9 +39,10 @@
     
 }
 
-__autoreleasing NSArray* GS_pointsForGravityDrop(CGPoint startPoint, CGPoint endPoint, CFTimeInterval duration, CGFloat gravity, NSUInteger numberOfPoints) {
+__autoreleasing NSArray* GS_pointsForGravityDrop(CGPoint startPoint, CGPoint endPoint, CFTimeInterval duration, CGFloat gravity) {
     CGFloat dx = endPoint.x - startPoint.x;
     CGFloat dy = endPoint.y - startPoint.y;
+    NSUInteger numberOfPoints = (NSUInteger)gravity/40.0; // Empirically determined to be about right
     
     CGFloat incrementalTimeChange = duration/(CGFloat)numberOfPoints;
     
@@ -121,9 +122,8 @@ __autoreleasing NSArray* GS_pointsForGravityDrop(CGPoint startPoint, CGPoint end
     CGPoint toPosition = CGPointMake(downloadTabHorizontalCenter, [self view].frame.size.height - [indicatorView frame].size.height / 4);
     CAKeyframeAnimation *positionAnimation = [CAKeyframeAnimation animationWithKeyPath:@"position"];
     CGFloat gravity = 4000;
-    NSUInteger numberOfValues = 100;
     
-    NSArray *values = GS_pointsForGravityDrop(fromPosition, toPosition, duration, gravity, numberOfValues);
+    NSArray *values = GS_pointsForGravityDrop(fromPosition, toPosition, duration, gravity);
     [positionAnimation setValues:values];
     [positionAnimation setDuration:duration];
     
