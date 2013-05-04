@@ -48,4 +48,12 @@
 
 }
 
+- (void)incrementDownloadBadge {
+    
+    static NSUInteger downloadCount = 0;
+    downloadCount++;
+    [[[[_tabBarController tabBar] items] objectAtIndex:2] setBadgeValue:[NSString stringWithFormat:@"%u", downloadCount]];
+    
+}
+
 @end
