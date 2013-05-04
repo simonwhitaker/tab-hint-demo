@@ -114,12 +114,13 @@ __autoreleasing NSArray* GS_pointsForGravityDrop(CGPoint startPoint, CGPoint end
 
     // Create an animation group
     CFTimeInterval duration = 0.7;
+    CGFloat finalScale = 0.5;
     CAAnimationGroup *animationGroup = [[CAAnimationGroup alloc] init];
     [animationGroup setDuration:duration];
 
     // Create the position animation
     CGPoint fromPosition = [[indicatorView layer] position];
-    CGPoint toPosition = CGPointMake(downloadTabHorizontalCenter, [self view].frame.size.height - [indicatorView frame].size.height / 4);
+    CGPoint toPosition = CGPointMake(downloadTabHorizontalCenter, [self view].frame.size.height - [indicatorView frame].size.height / 2 * finalScale);
     CAKeyframeAnimation *positionAnimation = [CAKeyframeAnimation animationWithKeyPath:@"position"];
     CGFloat gravity = 4000;
     
@@ -129,7 +130,7 @@ __autoreleasing NSArray* GS_pointsForGravityDrop(CGPoint startPoint, CGPoint end
     
     CABasicAnimation *scaleAnimation = [CABasicAnimation animationWithKeyPath:@"transform.scale"];
     [scaleAnimation setFromValue:@(1.0)];
-    [scaleAnimation setToValue:@(0.5)];
+    [scaleAnimation setToValue:@(finalScale)];
     [scaleAnimation setDuration:duration];
 
     [animationGroup setAnimations:@[positionAnimation, scaleAnimation]];
