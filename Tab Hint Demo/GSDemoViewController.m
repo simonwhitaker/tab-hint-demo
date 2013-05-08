@@ -66,11 +66,12 @@ __autoreleasing NSArray* GS_pointsForGravityDrop(CGPoint startPoint, CGPoint end
     
     // Now we know how many points we've got, go back through filling in the X values
     CGFloat incrementalDisplacementChangeX = (endPoint.x - startPoint.x) / [points count];
-    [points enumerateObjectsWithOptions:NSEnumerationConcurrent usingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+    for (NSUInteger idx = 0; idx < [points count]; idx++) {
+        id obj = [points objectAtIndex:idx];
         CGPoint p = [obj CGPointValue];
         p.x = startPoint.x + (CGFloat)idx * incrementalDisplacementChangeX;
         [points replaceObjectAtIndex:idx withObject:[NSValue valueWithCGPoint:p]];
-    }];
+    }
     
     if (duration != NULL) {
         *duration = frameRate * [points count];
