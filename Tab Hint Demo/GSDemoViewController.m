@@ -85,7 +85,7 @@ __autoreleasing NSArray* GS_pointsForGravityDrop(CGPoint startPoint, CGPoint end
     
     UIButton *downloadButton = (UIButton*)sender;
 
-    // Find the frame of the download button
+    // Find the frame of the "Downloads" tab bar button
     UIView *downloadButtonView;
     NSUInteger downloadButtonIndex = 2;
     NSUInteger currentIndex = 0;
